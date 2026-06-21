@@ -8,7 +8,7 @@ Envoie automatiquement une notification dans un salon Discord à chaque nouveau 
 
 ## Comment ça marche
 
-1. GitHub Actions déclenche le script toutes les 30 minutes
+1. cron-job.org déclenche le workflow GitHub Actions toutes les 30 minutes
 2. Le script interroge Apify qui scrape le compte Instagram cible
 3. Si un nouveau post est détecté → une notification est envoyée dans ton salon Discord
 4. L'ID du dernier post vu est sauvegardé pour éviter les doublons
@@ -19,6 +19,7 @@ Envoie automatiquement une notification dans un salon Discord à chaque nouveau 
 
 - Un compte [GitHub](https://github.com) (gratuit)
 - Un compte [Apify](https://apify.com) (gratuit — $5 de crédits/mois offerts)
+- Un compte [cron-job.org](https://cron-job.org) (gratuit)
 - Un serveur Discord avec droits d'administration
 
 ---
@@ -81,11 +82,44 @@ Dans ton repo forké sur GitHub :
 
 ---
 
-### Étape 6 — Premier lancement
+### Étape 6 — Créer un token GitHub pour cron-job.org
 
-1. Dans l'onglet **Actions**, clique sur **Instagram Monitor** dans la liste à gauche
-2. Clique sur **Run workflow** → **Run workflow** (bouton vert)
-3. Attends ~30 secondes puis clique sur le run pour voir les logs
+1. GitHub → icône profil → **Settings**
+2. Menu gauche tout en bas → **Developer settings**
+3. **Personal access tokens** → **Tokens (classic)**
+4. **Generate new token (classic)**
+5. Donne-lui un nom (ex: `cron-job`)
+6. Coche uniquement **`workflow`**
+7. Expiration → **No expiration**
+8. Clique **Generate token** et copie-le
+
+---
+
+### Étape 7 — Configurer cron-job.org
+
+1. Crée un compte gratuit sur [cron-job.org](https://cron-job.org)
+2. Clique **CREATE CRONJOB**
+3. Remplis les champs :
+   - **Title** : `Instagram Monitor`
+   - **URL** : `https://api.github.com/repos/TON_USERNAME/Instagram-Discord-Webhook/actions/workflows/monitor.yml/dispatches`
+   - **Schedule** : Every 30 minutes
+4. Clique sur **ADVANCED** puis :
+   - **Request method** : `POST`
+   - **Request headers** → ajoute ces 2 headers :
+     - `Authorization` → `Bearer TON_TOKEN_GITHUB`
+     - `Accept` → `application/vnd.github+json`
+   - **Request body** : `{"ref":"main"}`
+5. Clique **CREATE**
+
+> Remplace `TON_USERNAME` par ton nom d'utilisateur GitHub dans l'URL.
+
+---
+
+### Étape 8 — Premier lancement
+
+1. Dans cron-job.org, ouvre ton cronjob et clique sur le bouton **Test** pour le lancer manuellement
+2. Va dans l'onglet **Actions** de ton repo GitHub
+3. Un run doit apparaître — clique dessus pour voir les logs
 
 Tu dois voir dans les logs :
 ```
@@ -116,15 +150,13 @@ C'est normal — au premier lancement rien n'est envoyé sur Discord. À partir 
 
 ## Changer l'intervalle de vérification
 
-Par défaut : toutes les **30 minutes**.
+L'intervalle se configure dans cron-job.org (pas dans le code).
 
-Pour modifier, édite le fichier `.github/workflows/monitor.yml` ligne 5 :
-
-| Intervalle | Valeur cron | Coût Apify/mois |
-|---|---|---|
-| 15 minutes | `*/15 * * * *` | ~$5.83 ⚠️ |
-| 30 minutes | `*/30 * * * *` | ~$3.89 ✅ |
-| 1 heure | `0 * * * *` | ~$1.94 ✅ |
+| Intervalle | Coût Apify/mois |
+|---|---|
+| 15 minutes | ~$5.83 ⚠️ |
+| 30 minutes | ~$3.89 ✅ |
+| 1 heure | ~$1.94 ✅ |
 
 > Ne pas descendre sous 30 minutes pour rester dans le plan gratuit Apify.
 
@@ -148,3 +180,4 @@ Pour modifier, édite le fichier `.github/workflows/monitor.yml` ligne 5 :
 - Projet original par [Fernando](https://github.com/fernandod1)
 - Mis à jour pour 2026 par [bionixium](https://github.com/bionixium)
 - Scraping via [Apify](https://apify.com)
+- Scheduling via [cron-job.org](https://cron-job.org)
