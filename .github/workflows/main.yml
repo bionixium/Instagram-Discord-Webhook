@@ -26,4 +26,4 @@ jobs:
           WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
           IG_USERNAME: ${{ secrets.INSTAGRAM_USERNAME }}
           TIME_INTERVAL: '600'
-        run: python bot.py
+        run: python instagram-discord.py
