@@ -27,7 +27,7 @@ Envoie automatiquement une notification dans un salon Discord à chaque nouveau 
 
 ### Étape 1 — Copier le projet
 
-1. Va sur [https://github.com/sebastienlamine/Instagram-Discord-Webhook](https://github.com/sebastienlamine/Instagram-Discord-Webhook)
+1. Va sur [https://github.com/bionixium/Instagram-Discord-Webhook](https://github.com/bionixium/Instagram-Discord-Webhook)
 2. Clique sur le bouton **Fork** en haut à droite
 3. Clique sur **Create fork**
 
@@ -146,5 +146,5 @@ Pour modifier, édite le fichier `.github/workflows/monitor.yml` ligne 5 :
 ## Crédits
 
 - Projet original par [Fernando](https://github.com/fernandod1)
-- Mis à jour pour 2026 par [sebastienlamine](https://github.com/sebastienlamine)
+- Mis à jour pour 2026 par [bionixium](https://github.com/bionixium)
 - Scraping via [Apify](https://apify.com)
