@@ -25,4 +25,4 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           INSTAGRAM_USERNAME: ${{ secrets.INSTAGRAM_USERNAME }}
-        run: python main.py
+        run: instagram-discord.py
