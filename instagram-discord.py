@@ -39,31 +39,30 @@ HEADERS = {
 
 
 def get_latest_post():
-    """Fetch the latest post from picuki.com for the target account."""
-    url  = f"https://www.picuki.com/profile/{IG_TARGET}"
+    """Fetch the latest post from imginn.com for the target account."""
+    url  = f"https://imginn.com/{IG_TARGET}/"
     resp = requests.get(url, headers=HEADERS, timeout=15)
     resp.raise_for_status()
 
     soup  = BeautifulSoup(resp.text, "html.parser")
-    posts = soup.select("div.box-photo")
+    posts = soup.select("div.item")
 
     if not posts:
-        raise ValueError("No posts found — picuki.com page structure may have changed.")
+        raise ValueError("No posts found — imginn.com page structure may have changed.")
 
     first = posts[0]
 
-    # Post URL → extract shortcode from the picuki link
-    link_tag = first.select_one("a[href*='/media/']")
-    picuki_url = link_tag["href"] if link_tag else None
-    shortcode  = picuki_url.split("/media/")[1].rstrip("/") if picuki_url else None
-    post_url   = f"https://www.instagram.com/p/{shortcode}/" if shortcode else None
+    # Post URL → extract shortcode from the imginn link
+    link_tag  = first.select_one("a[href*='/p/']")
+    post_url  = "https://www.instagram.com" + link_tag["href"] if link_tag else None
+    shortcode = link_tag["href"].split("/p/")[1].rstrip("/") if link_tag else None
 
     # Image
     img_tag   = first.select_one("img")
-    image_url = img_tag["src"] if img_tag else None
+    image_url = img_tag.get("data-src") or img_tag.get("src") if img_tag else None
 
     # Caption
-    caption_tag = first.select_one(".photo-description")
+    caption_tag = first.select_one(".desc")
     caption     = caption_tag.get_text(strip=True) if caption_tag else ""
 
     return {
