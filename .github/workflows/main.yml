@@ -2,8 +2,8 @@ name: Instagram Monitor
 
 on:
   schedule:
-    - cron: '0 * * * *' # S'exécute automatiquement toutes les heures
-  workflow_dispatch: # Permet de lancer le test à la main avec le bouton
+    - cron: '0 * * * *' # Vérification automatique toutes les heures
+  workflow_dispatch: # Permet le lancement manuel avec le bouton
 
 jobs:
   build:
@@ -23,6 +23,7 @@ jobs:
 
       - name: Run script
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          INSTAGRAM_USERNAME: ${{ secrets.INSTAGRAM_USERNAME }}
-        run: index.py
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          IG_USERNAME: ${{ secrets.IG_USERNAME }}
+          TIME_INTERVAL: '600'
+        run: python bot.py
