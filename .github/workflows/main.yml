@@ -1,0 +1,28 @@
+name: Instagram Monitor
+
+on:
+  schedule:
+    - cron: '0 * * * *' # S'exécute automatiquement toutes les heures
+  workflow_dispatch: # Permet de lancer le test à la main avec le bouton
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Run script
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          INSTAGRAM_USERNAME: ${{ secrets.INSTAGRAM_USERNAME }}
+        run: python main.py
