@@ -69,7 +69,7 @@ def save_last_id(post_id: str) -> None:
 def send_to_discord(post: dict) -> None:
     embed = {
         "color":       15467852,
-        "title":       f"New post from @{IG_TARGET}",
+        "title":       f"Nouveau post de @{IG_TARGET} ! Va vite le voir !",
         "url":         post["post_url"],
         "description": post["caption"],
     }
@@ -78,7 +78,7 @@ def send_to_discord(post: dict) -> None:
 
     resp = requests.post(
         WEBHOOK_URL,
-        json={"embeds": [embed]},
+        json={"content": "@everyone", "embeds": [embed]},
         timeout=10,
     )
     resp.raise_for_status()
