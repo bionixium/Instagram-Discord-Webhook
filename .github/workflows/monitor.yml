@@ -2,8 +2,8 @@ name: Instagram Monitor
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
-  workflow_dispatch:
+    - cron: "0 * * * *"   # every hour
+  workflow_dispatch:        # allow manual trigger
 
 permissions:
   contents: write
@@ -22,10 +22,11 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4
+        run: pip install requests
 
       - name: Run monitor
         env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
           IG_TARGET:   ${{ secrets.IG_TARGET }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
         run: python instagram-discord.py

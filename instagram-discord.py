@@ -1,75 +1,56 @@
 #!/usr/bin/python
 
-# Copyright (c) 2020 Fernando — updated 2026
-# License: MIT
-
 # DESCRIPTION:
-# Scrapes a public Instagram profile via a third-party viewer (no Instagram
-# account required, works from GitHub Actions IPs).
-# 1.) Fetches latest post from the target account via picuki.com.
+# Uses Apify's Instagram scraper (residential proxies, no account needed).
+# 1.) Calls Apify API to get the latest post from the target Instagram account.
 # 2.) If a new post is detected, sends it to Discord via webhook.
 # 3.) Saves state between GitHub Actions runs via state.txt.
 
 # REQUIREMENTS:
 # - Python v3.9+
-# - pip install requests beautifulsoup4
+# - pip install requests
 
 # ENVIRONMENT VARIABLES (GitHub Actions secrets):
+#   APIFY_TOKEN : your Apify API token (free at apify.com)
 #   IG_TARGET   : Instagram account to monitor (e.g. "lebronjames")
 #   WEBHOOK_URL : Discord webhook URL
 
 import os
 import json
-import time
 import requests
-from bs4 import BeautifulSoup
 
 STATE_FILE  = "state.txt"
+APIFY_TOKEN = os.environ["APIFY_TOKEN"]
 IG_TARGET   = os.environ["IG_TARGET"]
 WEBHOOK_URL = os.environ["WEBHOOK_URL"]
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    ),
-    "Accept-Language": "en-US,en;q=0.9",
-}
+ACTOR_ID = "apify~instagram-scraper"
 
 
-def get_latest_post():
-    """Fetch the latest post from imginn.com for the target account."""
-    url  = f"https://imginn.com/{IG_TARGET}/"
-    resp = requests.get(url, headers=HEADERS, timeout=15)
+def get_latest_post() -> dict:
+    """Run Apify Instagram scraper and return the latest post."""
+    url = (
+        f"https://api.apify.com/v2/acts/{ACTOR_ID}/run-sync-get-dataset-items"
+        f"?token={APIFY_TOKEN}&timeout=60&memory=256"
+    )
+    payload = {
+        "directUrls": [f"https://www.instagram.com/{IG_TARGET}/"],
+        "resultsType": "posts",
+        "resultsLimit": 1,
+    }
+    resp = requests.post(url, json=payload, timeout=120)
     resp.raise_for_status()
 
-    soup  = BeautifulSoup(resp.text, "html.parser")
-    posts = soup.select("div.item")
+    items = resp.json()
+    if not items:
+        raise ValueError("No posts returned by Apify.")
 
-    if not posts:
-        raise ValueError("No posts found — imginn.com page structure may have changed.")
-
-    first = posts[0]
-
-    # Post URL → extract shortcode from the imginn link
-    link_tag  = first.select_one("a[href*='/p/']")
-    post_url  = "https://www.instagram.com" + link_tag["href"] if link_tag else None
-    shortcode = link_tag["href"].split("/p/")[1].rstrip("/") if link_tag else None
-
-    # Image
-    img_tag   = first.select_one("img")
-    image_url = img_tag.get("data-src") or img_tag.get("src") if img_tag else None
-
-    # Caption
-    caption_tag = first.select_one(".desc")
-    caption     = caption_tag.get_text(strip=True) if caption_tag else ""
-
+    post = items[0]
     return {
-        "id":        shortcode or image_url,
-        "post_url":  post_url,
-        "image_url": image_url,
-        "caption":   caption,
+        "id":        post.get("id") or post.get("shortCode"),
+        "post_url":  post.get("url") or f"https://www.instagram.com/p/{post.get('shortCode')}/",
+        "image_url": post.get("displayUrl"),
+        "caption":   (post.get("caption") or "")[:2000],
     }
 
 
@@ -90,25 +71,25 @@ def send_to_discord(post: dict) -> None:
         "color":       15467852,
         "title":       f"New post from @{IG_TARGET}",
         "url":         post["post_url"],
-        "description": post["caption"][:2000],
+        "description": post["caption"],
     }
     if post["image_url"]:
         embed["image"] = {"url": post["image_url"]}
 
-    result = requests.post(
+    resp = requests.post(
         WEBHOOK_URL,
-        data=json.dumps({"embeds": [embed]}),
-        headers={"Content-Type": "application/json"},
+        json={"embeds": [embed]},
         timeout=10,
     )
-    result.raise_for_status()
-    print(f"Posted to Discord (HTTP {result.status_code}): {post['post_url']}")
+    resp.raise_for_status()
+    print(f"Posted to Discord (HTTP {resp.status_code}): {post['post_url']}")
 
 
 def main():
-    print(f"Checking @{IG_TARGET} …")
+    print(f"Checking @{IG_TARGET} via Apify …")
+
     post    = get_latest_post()
-    post_id = post["id"]
+    post_id = str(post["id"])
     print(f"Latest post ID: {post_id}")
 
     last_id = load_last_id()
@@ -125,7 +106,7 @@ def main():
 
 
 if __name__ == "__main__":
-    required = ["IG_TARGET", "WEBHOOK_URL"]
+    required = ["APIFY_TOKEN", "IG_TARGET", "WEBHOOK_URL"]
     missing  = [v for v in required if not os.environ.get(v)]
     if missing:
         print(f"Missing environment variables: {', '.join(missing)}")
