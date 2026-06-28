@@ -96,6 +96,10 @@ def main():
     post_id = str(post["id"])
     print(f"Latest post ID: {post_id}")
 
+    if not post_id or post_id == "None":
+        print("Apify returned no valid post ID — skipping to avoid false notification.")
+        return
+
     last_id = load_last_id()
 
     if last_id is None:
