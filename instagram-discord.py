@@ -31,7 +31,7 @@ def get_latest_post() -> dict:
     """Run Apify Instagram scraper and return the latest post."""
     url = (
         f"https://api.apify.com/v2/acts/{ACTOR_ID}/run-sync-get-dataset-items"
-        f"?token={APIFY_TOKEN}&timeout=60&memory=256"
+        f"?token={APIFY_TOKEN}&timeout=120&memory=256"
     )
     payload = {
         "directUrls": [f"https://www.instagram.com/{IG_TARGET}/"],
