@@ -46,10 +46,9 @@ def get_latest_post() -> dict:
         raise ValueError("No posts returned by Apify.")
 
     post = items[0]
-    shortcode = post.get("shortCode") or post.get("id")
     return {
-        "id":        shortcode,
-        "post_url":  f"https://www.instagram.com/p/{shortcode}/",
+        "id":        post.get("id") or post.get("shortCode"),
+        "post_url":  post.get("url") or f"https://www.instagram.com/p/{post.get('shortCode')}/",
         "image_url": post.get("displayUrl"),
         "caption":   (post.get("caption") or "")[:2000],
     }
